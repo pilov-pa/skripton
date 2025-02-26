@@ -2,8 +2,8 @@
     <id>org.pilov.skripton</id>
     <name>Skripton</name>
     <vendor>Aleksey Pilov</vendor>
-    <version>0.1.0</version>
-
+    <version>0.1.1</version>
+    <idea-version since-build="231" until-build="241.*"/>
     <depends>com.intellij.modules.platform</depends>
 
     <description><![CDATA[
