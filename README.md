@@ -9,3 +9,7 @@ Skripton is an IntelliJ IDEA plugin that empowers you to automate text transform
 *   **Enhanced Productivity:** Transform selected code or text instantly by replacing it with the output of your Bash scripts, streamlining repetitive tasks and boosting your workflow efficiency.
 
 Whether you're reformatting data, converting code snippets, or performing complex text manipulations, Skripton provides a flexible and powerful solution that puts script automation right at your fingertips.
+
+Demo video
+----------
+[![Skripton Demo](https://img.youtube.com/vi/mR14KJSmtwQ/0.jpg)](https://www.youtube.com/watch?v=mR14KJSmtwQ)
