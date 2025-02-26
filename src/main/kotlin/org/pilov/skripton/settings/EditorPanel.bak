@@ -1,0 +1,157 @@
+package org.pilov.skripton.settings
+
+import com.intellij.ide.DataManager
+import com.intellij.ide.ui.UISettings
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.Shortcut
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.keymap.Keymap
+import com.intellij.openapi.keymap.KeymapManager
+import com.intellij.openapi.keymap.KeymapManagerListener
+import com.intellij.openapi.keymap.KeymapUtil
+import com.intellij.openapi.keymap.impl.ui.KeymapPanel
+import com.intellij.openapi.options.SettingsEditor
+import com.intellij.openapi.options.ShowSettingsUtil
+import com.intellij.openapi.options.ex.Settings
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.ui.IdeBorderFactory
+import com.intellij.ui.components.ActionLink
+import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTextField
+import com.intellij.util.ui.JBUI
+import java.awt.BorderLayout
+import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+
+/**
+ * Панель для редактирования выбранного скрипта: имя + код.
+ */
+class EditorPanel : JPanel(BorderLayout()), Disposable {
+
+    private var id: Int? = null
+    var isLoading = false
+
+    private val actionManager = ActionManager.getInstance()
+    private val keymap: Keymap = KeymapManager.getInstance().activeKeymap
+    private val keymapLink: ActionLink = ActionLink("Not set") {
+        goToKeymap()
+    }
+    private val keymapLinkNotSaved: JLabel = JLabel("Script is not saved")
+    val nameField = JBTextField(20)
+    val codeField = JBTextArea()
+
+    val actionId get() = "Skripton.${id}"
+
+    var onChange: (() -> Unit)? = null
+
+    override fun dispose() {}
+
+    init {
+        border = IdeBorderFactory.createEmptyBorder(JBUI.insets(8))
+
+        val messageBus = ApplicationManager.getApplication().messageBus
+            .connect(this)
+
+        messageBus.subscribe(KeymapManagerListener.TOPIC, object : KeymapManagerListener {
+                override fun activeKeymapChanged(keymap: Keymap?) {
+                    updateShortcutDisplay()
+                }
+            })
+
+        val topPanel = JPanel(BorderLayout()).apply {
+            add(createNamePanel(), BorderLayout.WEST)
+            add(createShortcutPanel(), BorderLayout.EAST)
+        }
+
+        val documentListener = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent?) {
+                if (!isLoading) onChange?.invoke()
+            }
+
+            override fun removeUpdate(e: DocumentEvent?) {
+                if (!isLoading) onChange?.invoke()
+            }
+
+            override fun changedUpdate(e: DocumentEvent?) {
+                if (!isLoading) onChange?.invoke()
+            }
+        }
+
+        nameField.document.addDocumentListener(documentListener)
+        codeField.document.addDocumentListener(documentListener)
+
+        val centerPanel = JPanel(BorderLayout()).apply {
+            border = IdeBorderFactory.createTitledBorder("Script", false)
+            add(JScrollPane(codeField), BorderLayout.CENTER)
+        }
+
+        add(topPanel, BorderLayout.NORTH)
+        add(centerPanel, BorderLayout.CENTER)
+    }
+
+    private fun createNamePanel(): JPanel {
+        val namePanel = JPanel(BorderLayout())
+        namePanel.add(JLabel("Script Name"), BorderLayout.NORTH)
+        namePanel.add(nameField, BorderLayout.CENTER)
+        return namePanel
+    }
+
+    private fun createShortcutPanel(): JPanel {
+        val shortcutPanel = JPanel(BorderLayout())
+        shortcutPanel.add(JLabel("Shortcut", SwingConstants.RIGHT), BorderLayout.NORTH)
+        shortcutPanel.add(keymapLink, BorderLayout.CENTER)
+        shortcutPanel.add(keymapLinkNotSaved, BorderLayout.SOUTH)
+        return shortcutPanel
+    }
+
+    fun goToKeymap() {
+        val allSettings = Settings.KEY.getData(
+            DataManager.getInstance().getDataContext(this)
+        )
+
+        val keymapPanel: KeymapPanel? = if (allSettings == null) {
+            KeymapPanel()
+        } else {
+            allSettings.find(KeymapPanel::class.java)
+        }
+        if (keymapPanel != null) {
+            val selectAction = Runnable { keymapPanel.selectAction(actionId) }
+            val project = ProjectManager.getInstance().openProjects.firstOrNull()
+            ShowSettingsUtil.getInstance().editConfigurable(project, keymapPanel, selectAction)
+        }
+    }
+
+    fun loadScript(data: SkriptonSettings.ScriptData) {
+        isLoading = true
+        try {
+            if (nameField.text != data.name)
+                nameField.text = data.name
+            if (codeField.text != data.content)
+                codeField.text = data.content
+            if (id != data.id)
+                id = data.id
+        } finally {
+            isLoading = false
+        }
+        updateShortcutDisplay()
+    }
+
+    fun updateShortcutDisplay() {
+        if (actionManager.getAction(actionId) == null) {
+            keymapLink.isVisible = false
+            keymapLinkNotSaved.isVisible = true
+            return
+        }
+        keymapLink.isVisible = true
+        keymapLinkNotSaved.isVisible = false
+        val shortcuts: Array<Shortcut> = keymap.getShortcuts(actionId)
+        val shortcutText = if (shortcuts.isNotEmpty()) {
+            KeymapUtil.getShortcutText(shortcuts[0])
+        } else {
+            "Not set"
+        }
+        keymapLink.text = shortcutText
+    }
+}

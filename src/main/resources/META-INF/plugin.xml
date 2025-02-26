@@ -1,0 +1,46 @@
+<idea-plugin>
+    <id>org.pilov.skripton</id>
+    <name>Skripton</name>
+    <vendor>Aleksey Pilov</vendor>
+    <version>0.1.0</version>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <description><![CDATA[
+<html>
+  <body>
+    <h2>Skripton: Selected Text Transform Automation for IntelliJ IDEA</h2>
+    <p>
+      Skripton is an IntelliJ IDEA plugin that empowers you to automate text transformations and code manipulations using custom Bash scripts—all from within your IDE.
+    </p>
+    <ul>
+      <li><strong>Create and Manage Multiple Scripts:</strong> Easily add, edit, or remove scripts via an intuitive settings interface that mirrors the look and feel of standard IntelliJ dialogs.</li>
+      <li><strong>Dynamic Keyboard Shortcuts:</strong> Bind custom scripts to keyboard shortcuts directly through the standard Keymap settings, letting you trigger your transformations with a single keystroke.</li>
+      <li><strong>Seamless Integration:</strong> Once configured, your scripts are dynamically registered and appear in the Tools menu, making them accessible and organized for rapid use.</li>
+      <li><strong>Enhanced Productivity:</strong> Transform selected code or text instantly by replacing it with the output of your Bash scripts, streamlining repetitive tasks and boosting your workflow efficiency.</li>
+    </ul>
+    <p>
+      Whether you're reformatting data, converting code snippets, or performing complex text manipulations, Skripton provides a flexible and powerful solution that puts script automation right at your fingertips.
+    </p>
+  </body>
+</html>
+]]></description>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="org.pilov.skripton.PluginStartup"/>
+        <applicationService serviceImplementation="org.pilov.skripton.settings.SkriptonSettings"/>
+        <applicationConfigurable instance="org.pilov.skripton.settings.SkriptonConfigurable"
+                                 displayName="Skripton"
+                                 id="org.pilov.skripton.settings"/>
+    </extensions>
+
+    <actions>
+        <group id="Skripton.Group"
+               text="Skripton Scripts"
+               description="Run custom scripts"
+               popup="true">
+        </group>
+    </actions>
+
+
+</idea-plugin>
