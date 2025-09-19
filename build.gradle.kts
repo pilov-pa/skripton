@@ -1,4 +1,3 @@
-import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,7 +7,7 @@ plugins {
 }
 
 group = "org.pilov"
-version = "0.1.1"
+version = "0.1.2"
 
 repositories {
     mavenCentral()
